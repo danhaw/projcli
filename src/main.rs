@@ -1,30 +1,17 @@
-
-use chrono::{DateTime, Utc, Datelike, Timelike};
-
-fn main() {
-    let mut p = Project::new("test project");
-    p.description("test desc").priority(Priority::High);
-
-    dbg!(p.title);
-    dbg!(p.description);
-    dbg!(p.priority);
-}
-
-
+use chrono::{DateTime, Datelike, Timelike, Utc};
 
 #[derive(Debug)]
 enum Priority {
     High,
     Medium,
-    Low
+    Low,
 }
 
 enum Status {
     Todo,
     InProgress,
-    Done
+    Done,
 }
-
 
 //Todo use a Crate for terminal colors..maybe colored?
 enum Color {
@@ -44,65 +31,51 @@ enum Color {
     BrightMagenta,
     BrightCyan,
     BrightWhite,
-    TrueColor {
-        r: u8,
-        g: u8,
-        b: u8,
-    },
-
+    TrueColor { r: u8, g: u8, b: u8 },
 }
-
-
 
 //TODO: make an asynchronos function that saves/keep track of and run the Reminders that are collected from the saved Remindables
 trait Remindable<'a> {
     fn set_reminder(date: DateTime<Utc>, message: &'a str) -> Reminder;
 }
 
-
 struct Reminder<'a> {
     duration: Duration,
-    message: &'a str
+    message: &'a str,
 }
 impl<'a> Reminder<'a> {
-    fn new(reminder_date: DateTime<Utc>, message: &'a str) -> Reminder<'a>{
+    fn new(reminder_date: DateTime<Utc>, message: &'a str) -> Reminder<'a> {
         let duration = Duration::new(Utc::now(), reminder_date);
         Reminder {
             duration: duration,
-            message: message
+            message: message,
         }
     }
 }
-
-
-
-
 
 #[derive(Debug)]
 struct Note<'a> {
     title: &'a str,
     body: &'a str,
     created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>
-
+    updated_at: DateTime<Utc>,
 }
 
-
 impl<'a> Remindable<'a> for Note<'a> {
-    //another function(not created yet) will save and keep track of that returned Reminder 
+    //another function(not created yet) will save and keep track of that returned Reminder
     //TODO: update the previous comment after making the handler function
-    fn set_reminder(date: DateTime<Utc>, message: &'a str) -> Reminder<'a> { 
+    fn set_reminder(date: DateTime<Utc>, message: &'a str) -> Reminder<'a> {
         Reminder::new(date, message)
-     }
+    }
 }
 
 impl<'a> Note<'a> {
-    fn new(title: &'a str, body: &'a str) -> Note<'a>{
+    fn new(title: &'a str, body: &'a str) -> Note<'a> {
         Note {
             title: title,
             body: body,
             created_at: Utc::now(),
-            updated_at: Utc::now()
+            updated_at: Utc::now(),
         }
     }
 
@@ -115,91 +88,77 @@ impl<'a> Note<'a> {
         self.body = new_body;
         self.updated_at = Utc::now();
     }
-
-
 }
-
 
 struct Tag<'a> {
     title: &'a str,
     description: Option<&'a str>,
-    color: Color
+    color: Color,
 }
-
 
 struct Duration {
     // start_date: datetime
     start_date: DateTime<Utc>,
-    end_date: DateTime<Utc>
- }
- impl Duration {
-     fn new(start_date: DateTime<Utc>, end_date: DateTime<Utc>)-> Duration {
-         Duration {
-             start_date: start_date,
-             end_date: end_date
-         }
-     }
-     fn get_duration_days(&self) -> u32{
-         let duration=  self.end_date.signed_duration_since(self.start_date);
-         duration.num_days() as u32
-     }
- 
-     fn get_duration_weeks(&self) -> u32{
-         let duration=  self.end_date.signed_duration_since(self.start_date);
-         duration.num_weeks() as u32
-     }
- 
-     fn remaining_days_from_now(&self) -> Option<u32> {
-         let duration = self.end_date.signed_duration_since(Utc::now());
-         //check if its not ended yet
-         if duration.num_days() < 0 {
-             None
-         } else {
-             Some(duration.num_days() as u32)
-         } 
-         
-     }
- 
-     fn remaining_weeks_from_now(&self) -> Option<u32>{
-         let duration = self.end_date.signed_duration_since(Utc::now());
-         //check if it is not ended yet
-         if duration.num_days() < 0 {
-             None
-         } else {
-             Some(duration.num_weeks() as u32)    
-         }
-         
-     }
- 
- }
+    end_date: DateTime<Utc>,
+}
+impl Duration {
+    fn new(start_date: DateTime<Utc>, end_date: DateTime<Utc>) -> Duration {
+        Duration {
+            start_date: start_date,
+            end_date: end_date,
+        }
+    }
+    fn get_duration_days(&self) -> u32 {
+        let duration = self.end_date.signed_duration_since(self.start_date);
+        duration.num_days() as u32
+    }
 
+    fn get_duration_weeks(&self) -> u32 {
+        let duration = self.end_date.signed_duration_since(self.start_date);
+        duration.num_weeks() as u32
+    }
 
+    fn remaining_days_from_now(&self) -> Option<u32> {
+        let duration = self.end_date.signed_duration_since(Utc::now());
+        //check if its not ended yet
+        if duration.num_days() < 0 {
+            None
+        } else {
+            Some(duration.num_days() as u32)
+        }
+    }
 
+    fn remaining_weeks_from_now(&self) -> Option<u32> {
+        let duration = self.end_date.signed_duration_since(Utc::now());
+        //check if it is not ended yet
+        if duration.num_days() < 0 {
+            None
+        } else {
+            Some(duration.num_weeks() as u32)
+        }
+    }
+}
 
 struct TodoItem<'a> {
     title: &'a str,
     is_completed: bool,
-    created_at: DateTime<Utc>
-    //TODO: add completedTime
-
+    created_at: DateTime<Utc>, //TODO: add completedTime
 }
 struct TodoList<'a> {
     title: &'a str,
     items: Vec<TodoItem<'a>>,
-    created_at: DateTime<Utc>
+    created_at: DateTime<Utc>,
 }
-
-
 
 struct Project<'a> {
     title: &'a str,
     description: Option<&'a str>,
     notes: Vec<Note<'a>>,
     todo_lists: Vec<TodoList<'a>>,
-    duration: Option<Duration>, 
+    duration: Option<Duration>,
     priority: Option<Priority>,
     tags: Vec<Tag<'a>>,
-    status: Option<Status>
+    status: Option<Status>,
 }
 
 impl<'a> Project<'a> {
@@ -212,10 +171,10 @@ impl<'a> Project<'a> {
             duration: None,
             priority: None,
             tags: Vec::new(),
-            status: Some(Status::Todo)
+            status: Some(Status::Todo),
         }
     }
-    fn description<'b>(&'b mut self, desc:&'a str) -> &'b mut Project<'a> {
+    fn description<'b>(&'b mut self, desc: &'a str) -> &'b mut Project<'a> {
         self.description = Some(desc);
         self
     }
@@ -246,68 +205,97 @@ impl<'a> Project<'a> {
     }
 
     // set_status()
-    
 }
 
+fn main() {
+    let mut p = Project::new("test project");
+    p.description("test desc").priority(Priority::High);
+
+    dbg!(p.title);
+    dbg!(p.description);
+    dbg!(p.priority);
+}
 
 #[cfg(test)]
-mod tests{
+mod tests {
     use super::*;
     use chrono::offset::TimeZone;
 
     //test Duration type
     #[test]
     fn test_get_duration_days() {
-        
         let utc = Utc;
-        let d = Duration::new(utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y").unwrap(),
-         utc.datetime_from_str(&"Jan 30 02:19:17 2020", "%b %d %H:%M:%S %Y").unwrap());
+        let d = Duration::new(
+            utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+            utc.datetime_from_str(&"Jan 30 02:19:17 2020", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+        );
         assert_eq!(d.get_duration_days(), 29)
     }
     #[test]
     fn test_get_duration_weeks() {
         let utc = Utc;
-        let d = Duration::new(utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y").unwrap(),
-         utc.datetime_from_str(&"Jan 30 02:19:17 2020", "%b %d %H:%M:%S %Y").unwrap());
+        let d = Duration::new(
+            utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+            utc.datetime_from_str(&"Jan 30 02:19:17 2020", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+        );
         assert_eq!(d.get_duration_weeks(), 4)
     }
 
     #[test]
     fn test_remaining_days_from_now() {
         let utc = Utc;
-        let d = Duration::new(utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y").unwrap(), 
-        utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y").unwrap());
-        assert_eq!(d.remaining_days_from_now(), Some(33035)); //really long date so I don't have to update it 
+        let d = Duration::new(
+            utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+            utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+        );
+        assert_eq!(d.remaining_days_from_now(), Some(33035)); //really long date so I don't have to update it
     }
 
     #[test]
     fn test_remaining_days_from_now_passed_date() {
         let utc = Utc;
-        let d = Duration::new(utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y").unwrap(),
-        utc.datetime_from_str(&"Jan 30 02:19:17 2020", "%b %d %H:%M:%S %Y").unwrap());
-        assert_eq!(d.remaining_days_from_now(), None); 
+        let d = Duration::new(
+            utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+            utc.datetime_from_str(&"Jan 30 02:19:17 2020", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+        );
+        assert_eq!(d.remaining_days_from_now(), None);
     }
 
-   
     #[test]
     fn test_remaining_weeks_from_now() {
         let utc = Utc;
-        let d = Duration::new(utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y").unwrap(), 
-        utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y").unwrap());
-        assert_eq!(d.remaining_weeks_from_now(), Some(4719)); 
+        let d = Duration::new(
+            utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+            utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+        );
+        assert_eq!(d.remaining_weeks_from_now(), Some(4719));
     }
-    
+
     #[test]
     fn test_remaining_weeks_from_now_passed_date() {
         let utc = Utc;
-        let d = Duration::new(utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y").unwrap(),
-        utc.datetime_from_str(&"Jan 30 02:19:17 2020", "%b %d %H:%M:%S %Y").unwrap());
-        assert_eq!(d.remaining_weeks_from_now(), None); //really long date so I don't have to update it 
+        let d = Duration::new(
+            utc.datetime_from_str(&"Jan 1 02:19:17 2020", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+            utc.datetime_from_str(&"Jan 30 02:19:17 2020", "%b %d %H:%M:%S %Y")
+                .unwrap(),
+        );
+        assert_eq!(d.remaining_weeks_from_now(), None); //really long date so I don't have to update it
     }
 
     //test Note type
     #[test]
-    fn test_edit_note_title(){
+    fn test_edit_note_title() {
         let mut n = Note::new("test", "test body");
         //values that should change
         let old_title = n.title;
@@ -318,28 +306,27 @@ mod tests{
         let old_created_at = n.created_at;
 
         n.edit_title("test title");
-        
+
         //test changed values
-        assert_ne!(n.title, old_title); 
+        assert_ne!(n.title, old_title);
         assert_eq!(n.title, "test title");
 
         assert_ne!(n.updated_at, old_updated_at);
-        assert_eq!(n.updated_at.year(), Utc::now().year()); 
-        assert_eq!(n.updated_at.month(), Utc::now().month()); 
-        assert_eq!(n.updated_at.day(), Utc::now().day()); 
-        assert_eq!(n.updated_at.hour(), Utc::now().hour()); 
+        assert_eq!(n.updated_at.year(), Utc::now().year());
+        assert_eq!(n.updated_at.month(), Utc::now().month());
+        assert_eq!(n.updated_at.day(), Utc::now().day());
+        assert_eq!(n.updated_at.hour(), Utc::now().hour());
         assert_eq!(n.updated_at.minute(), Utc::now().minute());
         // I will count that is fast enough to happen in the same second for now until I find a better way
         assert_eq!(n.updated_at.second(), Utc::now().second()); //TODO: please find a better way
-        
-        
+
         //test unchanged values
         assert_eq!(n.body, old_body);
         assert_eq!(n.created_at, old_created_at);
     }
 
     #[test]
-    fn test_edit_note_body(){
+    fn test_edit_note_body() {
         let mut n = Note::new("test title", "test");
         //values that should change
         let old_body = n.body;
@@ -350,26 +337,22 @@ mod tests{
         let old_created_at = n.created_at;
 
         n.edit_body("test body");
-        
+
         //test changed values
-        assert_ne!(n.body, old_body); 
+        assert_ne!(n.body, old_body);
         assert_eq!(n.body, "test body");
 
         assert_ne!(n.updated_at, old_updated_at);
-        assert_eq!(n.updated_at.year(), Utc::now().year()); 
-        assert_eq!(n.updated_at.month(), Utc::now().month()); 
-        assert_eq!(n.updated_at.day(), Utc::now().day()); 
-        assert_eq!(n.updated_at.hour(), Utc::now().hour()); 
+        assert_eq!(n.updated_at.year(), Utc::now().year());
+        assert_eq!(n.updated_at.month(), Utc::now().month());
+        assert_eq!(n.updated_at.day(), Utc::now().day());
+        assert_eq!(n.updated_at.hour(), Utc::now().hour());
         assert_eq!(n.updated_at.minute(), Utc::now().minute());
         // I will count that is fast enough to happen in the same second for now until I find a better way
         assert_eq!(n.updated_at.second(), Utc::now().second()); //TODO: please find a better way
-        
-        
+
         //test unchanged values
         assert_eq!(n.title, old_title);
         assert_eq!(n.created_at, old_created_at);
     }
-
-
 }
-
