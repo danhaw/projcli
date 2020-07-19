@@ -142,8 +142,24 @@ impl Duration {
 struct TodoItem<'a> {
     title: &'a str,
     is_completed: bool,
-    created_at: DateTime<Utc>, //TODO: add completedTime
+    created_at: DateTime<Utc>,
+    completed_at: Option<DateTime<Utc>>
 }
+impl<'a> TodoItem<'a> {
+    fn new(title: &'a str) -> TodoItem<'a> {
+        TodoItem {
+            title: title,
+            is_completed: false,
+            created_at: Utc::now(),
+            completed_at: None
+        }
+    }
+    fn set_completed(&mut self){
+        self.is_completed = true;
+        self.completed_at = Some(Utc::now());
+    }
+}
+
 struct TodoList<'a> {
     title: &'a str,
     items: Vec<TodoItem<'a>>,
@@ -254,7 +270,11 @@ mod tests {
             utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
                 .unwrap(),
         );
-        assert_eq!(d.remaining_days_from_now(), Some(33035)); //really long date so I don't have to update it
+        let remaining_days = utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
+        .unwrap().signed_duration_since(Utc::now()).num_days() as u32;
+
+
+        assert_eq!(d.remaining_days_from_now(), Some(remaining_days)); //really long date so I don't have to update it
     }
 
     #[test]
@@ -278,7 +298,10 @@ mod tests {
             utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
                 .unwrap(),
         );
-        assert_eq!(d.remaining_weeks_from_now(), Some(4719));
+        let remaining_weeks = utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
+        .unwrap().signed_duration_since(Utc::now()).num_weeks() as u32;
+
+        assert_eq!(d.remaining_weeks_from_now(), Some(remaining_weeks));
     }
 
     #[test]
@@ -354,5 +377,39 @@ mod tests {
         //test unchanged values
         assert_eq!(n.title, old_title);
         assert_eq!(n.created_at, old_created_at);
+    }
+
+
+    //test todo item
+    #[test]
+    fn test_todo_item_set_completed(){
+        let mut item = TodoItem::new("do something");
+        //values should not be changed
+        let old_title = item.title;
+        let old_created_at = item.created_at;
+
+        //values should be changed
+        let old_is_completed = item.is_completed;
+
+        item.set_completed();
+
+
+        //test values should be changed
+        assert_ne!(item.is_completed, old_is_completed);
+        assert_eq!(item.is_completed, true);
+
+        assert_ne!(item.completed_at, None);
+        assert_eq!(item.completed_at.unwrap().year(), Utc::now().year());
+        assert_eq!(item.completed_at.unwrap().month(), Utc::now().month());
+        assert_eq!(item.completed_at.unwrap().day(), Utc::now().day());
+        assert_eq!(item.completed_at.unwrap().hour(), Utc::now().hour());
+        assert_eq!(item.completed_at.unwrap().minute(), Utc::now().minute());
+        // I will count that is fast enough to happen in the same second for now until I find a better way
+        assert_eq!(item.completed_at.unwrap().second(), Utc::now().second()); //TODO: please find a better way
+
+        //test unchanged values
+        assert_eq!(item.title, old_title);
+        assert_eq!(item.created_at, old_created_at);
+
     }
 }
