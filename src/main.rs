@@ -1,5 +1,7 @@
 use chrono::{DateTime, Datelike, Timelike, Utc};
 
+
+
 #[derive(Debug)]
 enum Priority {
     High,
@@ -102,12 +104,14 @@ struct Duration {
     end_date: DateTime<Utc>,
 }
 impl Duration {
+
     fn new(start_date: DateTime<Utc>, end_date: DateTime<Utc>) -> Duration {
         Duration {
             start_date: start_date,
             end_date: end_date,
         }
     }
+
     fn get_duration_days(&self) -> u32 {
         let duration = self.end_date.signed_duration_since(self.start_date);
         duration.num_days() as u32
@@ -139,12 +143,15 @@ impl Duration {
     }
 }
 
+#[derive(Debug, Clone)]
 struct TodoItem<'a> {
     title: &'a str,
     is_completed: bool,
     created_at: DateTime<Utc>,
     completed_at: Option<DateTime<Utc>>
 }
+
+
 impl<'a> TodoItem<'a> {
     fn new(title: &'a str) -> TodoItem<'a> {
         TodoItem {
@@ -158,12 +165,46 @@ impl<'a> TodoItem<'a> {
         self.is_completed = true;
         self.completed_at = Some(Utc::now());
     }
+    //TODO: add edit title method and figure out a way to update the parent todolist of the change
 }
 
 struct TodoList<'a> {
     title: &'a str,
     items: Vec<TodoItem<'a>>,
     created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>
+}
+
+impl<'a> TodoList<'a> {
+    fn new(title: &'a str) -> TodoList<'a>{
+        TodoList {
+            title: title,
+            items: Vec::new(),
+            created_at: Utc::now(),
+            updated_at: Utc::now()
+        }
+    }
+    fn add_todo_item(&mut self, title: &'a str){
+        //TODO: make a test for this method
+        let item = TodoItem::new(title);
+        self.items.push(item);
+        self.updated_at = Utc::now();
+    }
+    //TODO: add delete item
+
+
+    //TODO: Add tests 
+    fn get_completed_items(&self) -> Vec<TodoItem> {
+        let items = self.items.clone(); 
+       let mut completed_items = items.into_iter().filter(|item| item.is_completed).collect::<Vec<TodoItem>>();
+       completed_items   
+    }
+    fn get_uncompleted_items(&self) -> Vec<TodoItem> {
+        let items = self.items.clone(); 
+       let mut completed_items = items.into_iter().filter(|item| !item.is_completed).collect::<Vec<TodoItem>>();
+       completed_items   
+    }
+
 }
 
 struct Project<'a> {
