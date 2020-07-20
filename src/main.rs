@@ -1,4 +1,5 @@
 use chrono::{DateTime, Datelike, Timelike, Utc};
+use postgres::{Client, NoTls, Error};
 
 
 
@@ -57,6 +58,7 @@ impl<'a> Reminder<'a> {
 
 #[derive(Debug)]
 struct Note<'a> {
+    id: u32,
     title: &'a str,
     body: &'a str,
     created_at: DateTime<Utc>,
@@ -74,6 +76,7 @@ impl<'a> Remindable<'a> for Note<'a> {
 impl<'a> Note<'a> {
     fn new(title: &'a str, body: &'a str) -> Note<'a> {
         Note {
+            id: 0,
             title: title,
             body: body,
             created_at: Utc::now(),
@@ -90,9 +93,16 @@ impl<'a> Note<'a> {
         self.body = new_body;
         self.updated_at = Utc::now();
     }
+
+    fn store(&self) -> Result<(), Error> {
+        //let mut client = Client::connect("postgresql://postgres:testtest@localhost/promandb", NoTls)?;
+        todo!();
+    }
+
 }
 
 struct Tag<'a> {
+    id: u32,
     title: &'a str,
     description: Option<&'a str>,
     color: Color,
@@ -145,6 +155,7 @@ impl Duration {
 
 #[derive(Debug, Clone)]
 struct TodoItem<'a> {
+    id: u32,
     title: &'a str,
     is_completed: bool,
     created_at: DateTime<Utc>,
@@ -155,6 +166,7 @@ struct TodoItem<'a> {
 impl<'a> TodoItem<'a> {
     fn new(title: &'a str) -> TodoItem<'a> {
         TodoItem {
+            id: 0,
             title: title,
             is_completed: false,
             created_at: Utc::now(),
@@ -169,6 +181,7 @@ impl<'a> TodoItem<'a> {
 }
 
 struct TodoList<'a> {
+    id: u32,
     title: &'a str,
     items: Vec<TodoItem<'a>>,
     created_at: DateTime<Utc>,
@@ -178,6 +191,7 @@ struct TodoList<'a> {
 impl<'a> TodoList<'a> {
     fn new(title: &'a str) -> TodoList<'a>{
         TodoList {
+            id: 0,
             title: title,
             items: Vec::new(),
             created_at: Utc::now(),
@@ -264,6 +278,67 @@ impl<'a> Project<'a> {
     // set_status()
 }
 
+fn create_tables() -> Result<(), Error> {
+    let mut client = Client::connect("postgresql://postgres:testtest@localhost/promandb", NoTls)?;
+    client.batch_execute("
+    CREATE TABLE IF NOT EXISTS projects (
+        id              SERIAL PRIMARY KEY,
+        title           VARCHAR(255) NOT NULL,
+        description     VARCHAR(1200),
+        start_date      TIMESTAMP,
+        end_date        TIMESTAMP,
+        created_at      TIMESTAMP NOT NULL,
+        updated_at      TIMESTAMP NOT NULL
+    )
+    ")?; 
+    client.batch_execute("
+        CREATE TABLE IF NOT EXISTS notes (
+            id              SERIAL PRIMARY KEY,
+            title           VARCHAR(255) NOT NULL,
+            body            VARCHAR(1200),
+            created_at      TIMESTAMP NOT NULL,
+            updated_at      TIMESTAMP NOT NULL,
+            project_id      INTEGER NOT NULL REFERENCES projects
+        )
+    ")?;
+
+    client.batch_execute("
+    CREATE TABLE IF NOT EXISTS todo_lists (
+        id              SERIAL PRIMARY KEY,
+        title           VARCHAR(255) NOT NULL,
+        created_at      TIMESTAMP NOT NULL,
+        updated_at      TIMESTAMP NOT NULL,
+        project_id      INTEGER NOT NULL REFERENCES projects
+    )
+    ")?;
+
+    client.batch_execute("
+        CREATE TABLE IF NOT EXISTS todo_items (
+            id              SERIAL PRIMARY KEY,
+            title           VARCHAR(255) NOT NULL,
+            is_completed    BOOLEAN,
+            created_at      TIMESTAMP NOT NULL,
+            completed_at    TIMESTAMP NOT NULL,
+            todo_list_id    INTEGER NOT NULL REFERENCES todo_lists
+        )
+        ")?;
+
+  
+    client.batch_execute("
+        CREATE TABLE IF NOT EXISTS tags(
+            id              SERIAL PRIMARY KEY,
+            title           VARCHAR(255) NOT NULL,
+            description     VARCHAR(1200),
+            color           VARCHAR(50),
+            project_id      INTEGER NOT NULL REFERENCES projects
+        )
+    ")?;
+    
+
+    Ok(())
+
+}
+
 fn main() {
     let mut p = Project::new("test project");
     p.description("test desc").priority(Priority::High);
@@ -271,6 +346,11 @@ fn main() {
     dbg!(p.title);
     dbg!(p.description);
     dbg!(p.priority);
+    
+    match create_tables() {
+        Err(e) => println!("{:?}", e),
+        Ok(()) => println!("Database created successfully")
+    }
 }
 
 #[cfg(test)]
