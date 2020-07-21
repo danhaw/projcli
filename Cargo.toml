@@ -1,5 +1,5 @@
 [package]
-name = "assistent"
+name = "projcli"
 version = "0.1.0"
 authors = ["Dan"]
 edition = "2018"
