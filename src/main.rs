@@ -1,9 +1,9 @@
 use chrono::{DateTime, Datelike, Timelike, Utc};
 
 
-
+#[macro_use]
 mod database;
-use database::PgDatabase;
+
 
 
 #[derive(Debug)]
@@ -280,18 +280,32 @@ impl<'a> Project<'a> {
 
 
 fn main() {
-    let mut p = Project::new("test project");
-    p.description("test desc").priority(Priority::High);
+    //this code is just for testing the macro ..TODO: make a unit test instead
+    create_tables!(
+        projects => {
+            id: integer,
+            title: string,
+        },
+        notes => {
+            id: integer,
+            title: string,
+            body: string(1500),
+            project_id: integer,
+        },
+    );
 
-    dbg!(p.title);
-    dbg!(p.description);
-    dbg!(p.priority);
+    // let mut p = Project::new("test project");
+    // p.description("test desc").priority(Priority::High);
+
+    // dbg!(p.title);
+    // dbg!(p.description);
+    // dbg!(p.priority);
     
-    let mut db = PgDatabase::new("postgres", "testtest", "localhost", "promandb");
-    match db.create_tables() {
-        Err(e) => println!("{:?}", e),
-        Ok(()) => println!("Database created successfully")
-    }
+    // let mut db = database::PgDatabase::new("postgres", "testtest", "localhost", "promandb");
+    // match db.create_tables() {
+    //     Err(e) => println!("{:?}", e),
+    //     Ok(()) => println!("Database created successfully")
+    // }
 
 }
 #[cfg(test)]
