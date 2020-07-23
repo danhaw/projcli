@@ -1,10 +1,7 @@
 use chrono::{DateTime, Datelike, Timelike, Utc};
 
-
 #[macro_use]
 mod database;
-
-
 
 #[derive(Debug)]
 enum Priority {
@@ -53,8 +50,8 @@ impl<'a> Reminder<'a> {
     fn new(reminder_date: DateTime<Utc>, message: &'a str) -> Reminder<'a> {
         let duration = Duration::new(Utc::now(), reminder_date);
         Reminder {
-            duration: duration,
-            message: message,
+            duration,
+            message,
         }
     }
 }
@@ -80,8 +77,8 @@ impl<'a> Note<'a> {
     fn new(title: &'a str, body: &'a str) -> Note<'a> {
         Note {
             id: 0,
-            title: title,
-            body: body,
+            title,
+            body,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }
@@ -96,9 +93,6 @@ impl<'a> Note<'a> {
         self.body = new_body;
         self.updated_at = Utc::now();
     }
-
- 
-
 }
 
 struct Tag<'a> {
@@ -114,11 +108,10 @@ struct Duration {
     end_date: DateTime<Utc>,
 }
 impl Duration {
-
     fn new(start_date: DateTime<Utc>, end_date: DateTime<Utc>) -> Duration {
         Duration {
-            start_date: start_date,
-            end_date: end_date,
+            start_date,
+            end_date,
         }
     }
 
@@ -159,21 +152,20 @@ struct TodoItem<'a> {
     title: &'a str,
     is_completed: bool,
     created_at: DateTime<Utc>,
-    completed_at: Option<DateTime<Utc>>
+    completed_at: Option<DateTime<Utc>>,
 }
-
 
 impl<'a> TodoItem<'a> {
     fn new(title: &'a str) -> TodoItem<'a> {
         TodoItem {
             id: 0,
-            title: title,
+            title,
             is_completed: false,
             created_at: Utc::now(),
-            completed_at: None
+            completed_at: None,
         }
     }
-    fn set_completed(&mut self){
+    fn set_completed(&mut self) {
         self.is_completed = true;
         self.completed_at = Some(Utc::now());
     }
@@ -185,20 +177,20 @@ struct TodoList<'a> {
     title: &'a str,
     items: Vec<TodoItem<'a>>,
     created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>
+    updated_at: DateTime<Utc>,
 }
 
 impl<'a> TodoList<'a> {
-    fn new(title: &'a str) -> TodoList<'a>{
+    fn new(title: &'a str) -> TodoList<'a> {
         TodoList {
             id: 0,
-            title: title,
+            title,
             items: Vec::new(),
             created_at: Utc::now(),
-            updated_at: Utc::now()
+            updated_at: Utc::now(),
         }
     }
-    fn add_todo_item(&mut self, title: &'a str){
+    fn add_todo_item(&mut self, title: &'a str) {
         //TODO: make a test for this method
         let item = TodoItem::new(title);
         self.items.push(item);
@@ -206,19 +198,23 @@ impl<'a> TodoList<'a> {
     }
     //TODO: add delete item
 
-
-    //TODO: Add tests 
+    //TODO: Add tests
     fn get_completed_items(&self) -> Vec<TodoItem> {
-        let items = self.items.clone(); 
-       let mut completed_items = items.into_iter().filter(|item| item.is_completed).collect::<Vec<TodoItem>>();
-       completed_items   
+        let items = self.items.clone();
+         items
+            .into_iter()
+            .filter(|item| item.is_completed)
+            .collect::<Vec<TodoItem>>()
+        
     }
     fn get_uncompleted_items(&self) -> Vec<TodoItem> {
-        let items = self.items.clone(); 
-       let mut completed_items = items.into_iter().filter(|item| !item.is_completed).collect::<Vec<TodoItem>>();
-       completed_items   
+        let items = self.items.clone();
+        items
+            .into_iter()
+            .filter(|item| !item.is_completed)
+            .collect::<Vec<TodoItem>>()
+        
     }
-
 }
 
 struct Project<'a> {
@@ -235,7 +231,7 @@ struct Project<'a> {
 impl<'a> Project<'a> {
     fn new(title: &'a str) -> Project<'a> {
         Project {
-            title: title,
+            title,
             description: None,
             notes: Vec::new(),
             todo_lists: Vec::new(),
@@ -278,7 +274,6 @@ impl<'a> Project<'a> {
     // set_status()
 }
 
-
 fn main() {
     //this code is just for testing the macro ..TODO: make a unit test instead
     create_tables!(
@@ -300,13 +295,12 @@ fn main() {
     // dbg!(p.title);
     // dbg!(p.description);
     // dbg!(p.priority);
-    
+
     // let mut db = database::PgDatabase::new("postgres", "testtest", "localhost", "promandb");
     // match db.create_tables() {
     //     Err(e) => println!("{:?}", e),
     //     Ok(()) => println!("Database created successfully")
     // }
-
 }
 #[cfg(test)]
 mod tests {
@@ -346,9 +340,11 @@ mod tests {
             utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
                 .unwrap(),
         );
-        let remaining_days = utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
-        .unwrap().signed_duration_since(Utc::now()).num_days() as u32;
-
+        let remaining_days = utc
+            .datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
+            .unwrap()
+            .signed_duration_since(Utc::now())
+            .num_days() as u32;
 
         assert_eq!(d.remaining_days_from_now(), Some(remaining_days)); //really long date so I don't have to update it
     }
@@ -374,8 +370,11 @@ mod tests {
             utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
                 .unwrap(),
         );
-        let remaining_weeks = utc.datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
-        .unwrap().signed_duration_since(Utc::now()).num_weeks() as u32;
+        let remaining_weeks = utc
+            .datetime_from_str(&"Dec 30 02:19:17 2110", "%b %d %H:%M:%S %Y")
+            .unwrap()
+            .signed_duration_since(Utc::now())
+            .num_weeks() as u32;
 
         assert_eq!(d.remaining_weeks_from_now(), Some(remaining_weeks));
     }
@@ -455,10 +454,9 @@ mod tests {
         assert_eq!(n.created_at, old_created_at);
     }
 
-
     //test todo item
     #[test]
-    fn test_todo_item_set_completed(){
+    fn test_todo_item_set_completed() {
         let mut item = TodoItem::new("do something");
         //values should not be changed
         let old_title = item.title;
@@ -468,7 +466,6 @@ mod tests {
         let old_is_completed = item.is_completed;
 
         item.set_completed();
-
 
         //test values should be changed
         assert_ne!(item.is_completed, old_is_completed);
@@ -486,6 +483,5 @@ mod tests {
         //test unchanged values
         assert_eq!(item.title, old_title);
         assert_eq!(item.created_at, old_created_at);
-
     }
 }
