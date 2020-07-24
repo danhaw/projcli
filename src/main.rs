@@ -49,10 +49,7 @@ struct Reminder<'a> {
 impl<'a> Reminder<'a> {
     fn new(reminder_date: DateTime<Utc>, message: &'a str) -> Reminder<'a> {
         let duration = Duration::new(Utc::now(), reminder_date);
-        Reminder {
-            duration,
-            message,
-        }
+        Reminder { duration, message }
     }
 }
 
@@ -201,11 +198,10 @@ impl<'a> TodoList<'a> {
     //TODO: Add tests
     fn get_completed_items(&self) -> Vec<TodoItem> {
         let items = self.items.clone();
-         items
+        items
             .into_iter()
             .filter(|item| item.is_completed)
             .collect::<Vec<TodoItem>>()
-        
     }
     fn get_uncompleted_items(&self) -> Vec<TodoItem> {
         let items = self.items.clone();
@@ -213,7 +209,6 @@ impl<'a> TodoList<'a> {
             .into_iter()
             .filter(|item| !item.is_completed)
             .collect::<Vec<TodoItem>>()
-        
     }
 }
 
