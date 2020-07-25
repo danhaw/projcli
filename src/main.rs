@@ -3,6 +3,7 @@ use chrono::{DateTime, Datelike, Timelike, Utc};
 #[macro_use]
 mod database;
 
+
 #[derive(Debug)]
 enum Priority {
     High,
@@ -270,19 +271,20 @@ impl<'a> Project<'a> {
 }
 
 fn main() {
+    database::initialaize_db();
     //this code is just for testing the macro ..TODO: make a unit test instead
-    create_tables!(
-        projects => {
-            id: integer,
-            title: string,
-        },
-        notes => {
-            id: integer,
-            title: string,
-            body: string(1500),
-            project_id: integer,
-        },
-    );
+    // create_tables!(
+    //     projects => {
+    //         id: integer,
+    //         title: string,
+    //     },
+    //     notes => {
+    //         id: integer,
+    //         title: string,
+    //         body: string(1500),
+    //         project_id: integer,
+    //     },
+    // );
 
     // let mut p = Project::new("test project");
     // p.description("test desc").priority(Priority::High);
