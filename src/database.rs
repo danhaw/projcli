@@ -93,7 +93,7 @@ macro_rules!  create_tables {
                 Some(["reference", referenced_table_name]) => {
                     //this for the foreign key it has a reference to another table
                     //ex: reference(table_name) converts to INTEGER REFERENCE tablename
-                    let result = format!("INTEGER REFERENCE {}", referenced_table_name).to_string();
+                    let result = format!("INTEGER REFERENCES {}", referenced_table_name).to_string();
                     return result;
                 },
                 _ => return "".to_string() //TODO: change this
@@ -230,7 +230,7 @@ mod tests {
         );
         assert_eq!(create_tables_statements.len(), 2);
         assert_eq!(create_tables_statements[0], "CREATE TABLE IF NOT EXISTS projects (id SERIAL PRIMARY KEY, title VARCHAR, description VARCHAR(1000), start_date TIMESTAMP, end_date TIMESTAMP)");
-        assert_eq!(create_tables_statements[1], "CREATE TABLE IF NOT EXISTS notes (id SERIAL PRIMARY KEY, title VARCHAR, body VARCHAR(1500), created_at TIMESTAMP, updated_at TIMESTAMP, project_id INTEGER REFERENCE projects)");
+        assert_eq!(create_tables_statements[1], "CREATE TABLE IF NOT EXISTS notes (id SERIAL PRIMARY KEY, title VARCHAR, body VARCHAR(1500), created_at TIMESTAMP, updated_at TIMESTAMP, project_id INTEGER REFERENCES projects)");
     }
 
     // #[test]
