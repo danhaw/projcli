@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use postgres::Row;
 use postgres::{Client, Error, NoTls};
 extern crate regex;
@@ -42,11 +43,38 @@ impl PgDatabase {
         };
         Ok(result)
     }
+
+    pub fn add_value(&mut self, fields: HashMap<&str, &str>,  table_name: &str) -> Result<(), Error> {
+        let mut insert_statment = format!("INSERT INTO {} (", table_name);
+       
+        for field_name in fields.keys() {
+            if fields.keys().last() != Some(field_name) {
+                insert_statment.push_str(&format!("{}, ", field_name));
+            } else {
+                insert_statment.push_str(field_name);
+            }  
+        }
+        
+        insert_statment.push_str(") VALUES(");
+
+        for field_value in fields.values() {
+            if fields.values().last() != Some(field_value) {
+                insert_statment.push_str(&format!("'{}', ", field_value));
+            } else {
+                insert_statment.push_str(&format!("'{}'", field_value));
+            }  
+        }
+
+        insert_statment.push_str(")");
+        dbg!(&insert_statment);
+        self.client.batch_execute(&insert_statment)?;
+        Ok(())
+    } 
 }
 
 //add it to the project_db.rs
-pub fn initialaize_db() -> Result<(), Error> {
-    let mut db = PgDatabase::new("postgres", "testtest", "localhost", "promandb")?;
+pub fn initialaize_db(db: &mut PgDatabase) -> Result<(), Error> {
+ 
     let create_tables_statements = vec![
         "
                     CREATE TABLE IF NOT EXISTS projects (
@@ -54,9 +82,7 @@ pub fn initialaize_db() -> Result<(), Error> {
                         title           VARCHAR(255) NOT NULL,
                         description     VARCHAR(1200),
                         start_date      TIMESTAMP,
-                        end_date        TIMESTAMP,
-                        created_at      TIMESTAMP NOT NULL,
-                        updated_at      TIMESTAMP NOT NULL
+                        end_date        TIMESTAMP
                     )
                     ",
         "
@@ -99,6 +125,7 @@ pub fn initialaize_db() -> Result<(), Error> {
                     ",
     ];
 
+
     match db.create_tables(create_tables_statements) {
         Err(e) => Err(e),
         Ok(()) => {
@@ -106,4 +133,5 @@ pub fn initialaize_db() -> Result<(), Error> {
             Ok(())
         }
     }
+    
 }

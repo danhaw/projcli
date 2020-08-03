@@ -1,6 +1,7 @@
 use chrono::{DateTime, Datelike, Timelike, Utc};
+use std::collections::HashMap;
+use postgres::{Error, Client};
 
-#[macro_use]
 mod database;
 
 #[derive(Debug)]
@@ -38,6 +39,7 @@ enum Color {
 }
 
 //TODO: make an asynchronos function that saves/keep track of and run the Reminders that are collected from the saved Remindables
+//maybe use "notify-rust" crate for desktop notifications
 trait Remindable<'a> {
     fn set_reminder(date: DateTime<Utc>, message: &'a str) -> Reminder;
 }
@@ -221,10 +223,11 @@ struct Project<'a> {
     priority: Option<Priority>,
     tags: Vec<Tag<'a>>,
     status: Option<Status>,
+    database_client: database::PgDatabase //TODO: change it to a trait so it will be generic across databases
 }
 
 impl<'a> Project<'a> {
-    fn new(title: &'a str) -> Project<'a> {
+    fn new(title: &'a str, database_client: database::PgDatabase) -> Project<'a> {
         Project {
             title,
             description: None,
@@ -234,6 +237,7 @@ impl<'a> Project<'a> {
             priority: None,
             tags: Vec::new(),
             status: Some(Status::Todo),
+            database_client
         }
     }
     fn description<'b>(&'b mut self, desc: &'a str) -> &'b mut Project<'a> {
@@ -266,19 +270,33 @@ impl<'a> Project<'a> {
         self
     }
 
+    
+    fn save_to_database(&mut self) -> Result<(), Error> {
+        let mut fields = HashMap::new();
+        fields.insert("title", self.title);
+        fields.insert("description", self.description.unwrap());
+        //TODO: maybe add created_at and updated_at?
+        self.database_client.add_value(fields, "projects")?;
+        Ok(())
+    }
+
     // set_status()
 }
 
-fn main() {
-    match database::initialaize_db() {
+fn main() -> Result<(), Error>{
+    let mut db = database::PgDatabase::new("postgres", "testtest", "localhost", "promandb")?;
+    match database::initialaize_db(&mut db) {
         Err(e) => panic!(e),
         Ok(()) => {}
     };
+    
 
 
     
-    // let mut p = Project::new("test project");
-    // p.description("test desc").priority(Priority::High);
+    let mut p = Project::new("test", db);
+    p.description("desc").priority(Priority::High);
+    p.save_to_database()?;
+    
 
     // dbg!(p.title);
     // dbg!(p.description);
@@ -289,6 +307,8 @@ fn main() {
     //     Err(e) => println!("{:?}", e),
     //     Ok(()) => println!("Database created successfully")
     // }
+
+    Ok(())
 }
 #[cfg(test)]
 mod tests {
